@@ -2,20 +2,20 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Bauchumfang & Gewicht Tracker</title>
+  <title>Body Dashboard – Bauch, Gewicht, Energie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      /* Purple & Gelb Farbschema */
       --primary: #7c3aed;       /* Lila */
       --primary-soft: #ede9fe;
       --accent: #facc15;        /* Gelb */
       --bg-dark: #1f102f;
-      --card-bg: rgba(17, 24, 39, 0.9);
-      --border: rgba(148, 163, 184, 0.5);
+      --card-bg: rgba(17, 24, 39, 0.92);
+      --border: rgba(148, 163, 184, 0.55);
       --text-main: #f9fafb;
       --text-soft: #e5e7eb;
+      --danger: #fee2e2;
     }
 
     * {
@@ -25,12 +25,12 @@
     html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
       max-width: 100%;
-      overflow-x: hidden; /* kein horizontales Scrollen */
+      overflow-x: hidden; /* KEIN horizontales Scrollen der Seite */
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* Vollbild-Hintergrundbild + Overlay */
     body {
       color: var(--text-main);
       background-color: var(--bg-dark);
@@ -38,44 +38,54 @@
       min-height: 100vh;
     }
 
+    /* Vollbild-Hintergrundbild */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background-image: url("bauchumfang-hero.png"); /* HIER ggf. Dateinamen anpassen */
+      background-image: url("bauchumfang-hero.png"); /* ggf. Dateinamen anpassen */
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       z-index: -2;
     }
 
+    /* dunkles Lila-Overlay */
     body::after {
       content: "";
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at top, rgba(124, 58, 237, 0.55), rgba(15, 23, 42, 0.92));
+      background: radial-gradient(circle at top, rgba(124, 58, 237, 0.55), rgba(15, 23, 42, 0.95));
       z-index: -1;
     }
 
     .app-shell {
+      width: 100%;
       max-width: 1100px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .app-shell {
+        padding: 8px;
+      }
     }
 
     .topbar {
       margin-bottom: 12px;
       border-radius: 16px;
       padding: 14px 18px;
-      background: linear-gradient(90deg, rgba(124,58,237,0.96), rgba(147, 51, 234, 0.96));
-      box-shadow: 0 15px 40px rgba(15, 23, 42, 0.4);
-      border: 1px solid rgba(250, 204, 21, 0.55);
+      background: linear-gradient(90deg, rgba(124,58,237,0.96), rgba(147,51,234,0.96));
+      box-shadow: 0 15px 40px rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(250, 204, 21, 0.6);
     }
 
     .topbar-title {
       font-size: 1.35rem;
       font-weight: 700;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
     }
@@ -84,24 +94,24 @@
       font-size: 0.7rem;
       padding: 2px 8px;
       border-radius: 999px;
-      background: rgba(250, 204, 21, 0.16);
+      background: rgba(250, 204, 21, 0.18);
       color: #fef9c3;
-      border: 1px solid rgba(250, 204, 21, 0.5);
+      border: 1px solid rgba(250, 204, 21, 0.65);
     }
 
     .topbar-subtitle {
       font-size: 0.85rem;
-      color: #e5e7eb;
+      color: var(--text-soft);
       margin-top: 4px;
     }
 
     .layout {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
-      gap: 16px;
+      gap: 14px;
     }
 
-    @media (max-width: 880px) {
+    @media (max-width: 900px) {
       .layout {
         grid-template-columns: 1fr;
       }
@@ -110,25 +120,29 @@
     .card {
       background: var(--card-bg);
       border-radius: 16px;
-      padding: 14px 16px;
+      padding: 12px 14px;
       border: 1px solid var(--border);
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.55);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+    }
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
     }
 
     .card-title {
       font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
       color: var(--accent);
     }
 
-    .card-title span {
+    .card-sub {
       font-size: 0.8rem;
       color: var(--text-soft);
     }
@@ -138,38 +152,38 @@
     }
 
     .hero-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .hero-text p {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       color: var(--text-soft);
     }
 
     .hero-badge-row {
-      margin-top: 8px;
+      margin-top: 7px;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
     }
 
     .hero-badge {
-      font-size: 0.75rem;
-      padding: 4px 8px;
+      font-size: 0.74rem;
+      padding: 3px 8px;
       border-radius: 999px;
       background: rgba(250, 204, 21, 0.1);
       color: #fef9c3;
-      border: 1px solid rgba(250, 204, 21, 0.5);
+      border: 1px solid rgba(250, 204, 21, 0.55);
     }
 
     form {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 7px;
+      margin-top: 8px;
     }
 
     label {
@@ -180,7 +194,7 @@
 
     .field-group {
       display: flex;
-      gap: 8px;
+      gap: 7px;
     }
 
     .field-group .field {
@@ -188,28 +202,42 @@
     }
 
     input[type="date"],
-    input[type="number"] {
+    input[type="number"],
+    select {
       width: 100%;
-      padding: 8px 10px;
-      font-size: 0.95rem;
+      padding: 7px 9px;
+      font-size: 0.9rem;
       border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.75);
+      background: rgba(15, 23, 42, 0.9);
       color: var(--text-main);
       transition: border 0.15s, background 0.15s, box-shadow 0.15s;
     }
 
-    input[type="date"]::placeholder,
-    input[type="number"]::placeholder {
+    input::placeholder {
       color: #9ca3af;
     }
 
-    input[type="date"]:focus,
-    input[type="number"]:focus {
+    input:focus,
+    select:focus {
       border-color: var(--accent);
       outline: none;
-      background: rgba(15,23,42,0.95);
+      background: rgba(15,23,42,0.98);
       box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.45);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
     }
 
     @media (max-width: 640px) {
@@ -219,7 +247,7 @@
     }
 
     button {
-      padding: 9px 14px;
+      padding: 8px 13px;
       font-size: 0.9rem;
       border-radius: 999px;
       border: none;
@@ -235,24 +263,24 @@
 
     button.primary {
       background: linear-gradient(135deg, #a855f7, #7c3aed);
-      color: #f9fafb;
+      color: var(--text-main);
       border: 1px solid rgba(250, 204, 21, 0.7);
     }
 
     button.secondary {
-      background: rgba(55, 65, 81, 0.9);
-      color: #e5e7eb;
-      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(55, 65, 81, 0.95);
+      color: var(--text-main);
+      border: 1px solid rgba(148, 163, 184, 0.7);
     }
 
     button.danger {
-      background: rgba(127, 29, 29, 0.9);
-      color: #fee2e2;
-      border: 1px solid rgba(248, 113, 113, 0.7);
+      background: rgba(127, 29, 29, 0.95);
+      color: var(--danger);
+      border: 1px solid rgba(248, 113, 113, 0.85);
     }
 
     button.small {
-      padding: 6px 10px;
+      padding: 5px 9px;
       font-size: 0.78rem;
     }
 
@@ -263,8 +291,8 @@
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 6px;
+      gap: 7px;
+      margin-top: 4px;
     }
 
     @media (max-width: 640px) {
@@ -274,16 +302,16 @@
     }
 
     .stat-box {
-      background: rgba(17, 24, 39, 0.9);
+      background: rgba(17, 24, 39, 0.96);
       border-radius: 12px;
-      padding: 8px 10px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
+      padding: 7px 9px;
+      border: 1px solid rgba(148, 163, 184, 0.75);
     }
 
     .stat-label {
       font-size: 0.7rem;
       color: var(--text-soft);
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
 
     .stat-value {
@@ -299,51 +327,77 @@
       color: var(--text-soft);
     }
 
-    #chart-container {
-      margin-top: 8px;
-      height: 260px;
+    .range-toggle {
+      display: inline-flex;
+      padding: 2px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.7);
     }
 
-    #chart {
+    .range-btn {
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 0.78rem;
+      border: none;
+      background: transparent;
+      color: var(--text-soft);
+      cursor: pointer;
+    }
+
+    .range-btn.active {
+      background: rgba(124, 58, 237, 0.9);
+      color: #fefce8;
+    }
+
+    #chart-container-body,
+    #chart-container-energy {
+      margin-top: 6px;
+      height: 240px;
+    }
+
+    #bodyChart,
+    #energyChart {
       width: 100%;
       height: 100%;
     }
 
     .table-wrapper {
-      max-height: 260px;
+      max-height: 240px;
       overflow-y: auto;
       overflow-x: auto;
       border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.9);
-      margin-top: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.75);
+      background: rgba(15, 23, 42, 0.96);
+      margin-top: 6px;
     }
 
     table {
       width: 100%;
+      min-width: 100%;
       border-collapse: collapse;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-main);
     }
 
     th, td {
-      border-bottom: 1px solid rgba(55, 65, 81, 0.8);
-      padding: 6px 6px;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 5px 6px;
       text-align: right;
       white-space: nowrap;
     }
 
     th:first-child, td:first-child {
       text-align: left;
-      padding-left: 9px;
+      padding-left: 8px;
     }
 
     th:last-child, td:last-child {
-      padding-right: 9px;
+      padding-right: 8px;
     }
 
     th {
-      background: rgba(88, 28, 135, 0.95);
+      background: rgba(88, 28, 135, 0.98);
       position: sticky;
       top: 0;
       z-index: 1;
@@ -357,24 +411,23 @@
     .button-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 7px;
+      margin-top: 7px;
     }
 
     .footer-note {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--text-soft);
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
     .summary-row {
       font-size: 0.8rem;
-      margin: 4px 0;
-      color: #e5e7eb;
+      margin: 3px 0;
+      color: var(--text-soft);
     }
 
     .summary-row strong {
-      font-weight: 600;
       color: var(--accent);
     }
   </style>
@@ -383,84 +436,124 @@
   <main class="app-shell">
     <header class="topbar">
       <div class="topbar-title">
-        Bauchumfang & Gewicht Tracker
-        <span class="topbar-badge">Lokal, anonym, fokussiert</span>
+        Body Dashboard – Bauch, Gewicht & Energie
+        <span class="topbar-badge">Alles lokal, alles verknüpft</span>
       </div>
       <div class="topbar-subtitle">
-        Messwerte eintragen, echte Kurve sehen, 30-Tage-Trend, Jahres-Ø & Gesamt-Ø – alles bleibt nur in deinem Browser.
+        Bauchumfang, Gewicht, Kalorien, Schritte und Training in einem Tool. 30-Tage-Trend & Gesamtverlauf,
+        plus Körperfett-Schätzung, Grund- & Leistungsumsatz und Kalorienbilanz.
       </div>
     </header>
 
     <div class="layout">
-      <!-- Linke Spalte: Eingabe + Verlauf + Tabelle -->
+      <!-- LINKE SPALTE: Eingaben + Charts + Tabelle -->
       <div>
-        <!-- Eingabe -->
+        <!-- Neue Messung -->
         <section class="card">
-          <div class="card-title">
-            Neue Messung
-            <span>Heute eintragen & Verlauf ergänzen</span>
+          <div class="card-title-row">
+            <div class="card-title">Neue Tagesmessung</div>
+            <div class="card-sub">Datum + Körper + Energie</div>
           </div>
           <div class="hero-text">
-            <div class="hero-title">Dein Bauch im Fokus, nicht das Gewicht alleine.</div>
+            <div class="hero-title">Dein Tages-Dashboard.</div>
             <p>
-              Trage deinen Bauchumfang (Pflicht) und dein Gewicht (optional) ein.
-              Der Tracker glättet automatisch über 30 Tage und zeigt dir Trends statt Tageschaos.
+              Trage für einen Tag alles ein, was du tracken willst. Du kannst denselben Tag beliebig überschreiben,
+              falls du später noch Daten ergänzen möchtest.
             </p>
             <div class="hero-badge-row">
-              <div class="hero-badge">30-Tage-Gleitdurchschnitt</div>
-              <div class="hero-badge">Jahr & Gesamt-Ø</div>
-              <div class="hero-badge">CSV-Export für Excel/Numbers</div>
+              <div class="hero-badge">Bauch & Gewicht</div>
+              <div class="hero-badge">Kalorien & Schritte</div>
+              <div class="hero-badge">Krafttraining & Energie-Bilanz</div>
             </div>
           </div>
 
           <form id="entry-form">
-            <div class="field">
-              <label for="date">Datum</label>
-              <input type="date" id="date" />
+            <div class="field-group">
+              <div class="field">
+                <label for="date">Datum</label>
+                <input type="date" id="date" />
+              </div>
             </div>
 
             <div class="field-group">
               <div class="field">
                 <label for="waist">Bauchumfang (cm) *</label>
-                <input type="number" id="waist" step="0.1" required />
+                <input type="number" id="waist" step="0.1" placeholder="z. B. 89,5" />
               </div>
               <div class="field">
                 <label for="weight">Gewicht (kg, optional)</label>
-                <input type="number" id="weight" step="0.1" />
+                <input type="number" id="weight" step="0.1" placeholder="z. B. 79,8" />
               </div>
             </div>
 
-            <button type="submit" class="primary">
-              Eintrag speichern
-            </button>
+            <div class="field-group">
+              <div class="field">
+                <label for="calories">Kalorien gegessen (kcal)</label>
+                <input type="number" id="calories" step="1" placeholder="z. B. 1800" />
+              </div>
+              <div class="field">
+                <label for="steps">Schritte</label>
+                <input type="number" id="steps" step="1" placeholder="z. B. 8500" />
+              </div>
+            </div>
+
+            <div class="checkbox-row">
+              <input type="checkbox" id="strength" />
+              <label for="strength">Krafttraining gemacht</label>
+            </div>
+
+            <button type="submit" class="primary">Tagesdaten speichern / aktualisieren</button>
           </form>
         </section>
 
-        <!-- Verlauf -->
+        <!-- Verlauf Body -->
         <section class="card">
-          <div class="card-title">
-            Verlauf
-            <span>Echte Werte + 30-Tage-Trend</span>
+          <div class="card-title-row">
+            <div>
+              <div class="card-title">Verlauf Körper</div>
+              <div class="card-sub">Bauch, Gewicht, Körperfett (geschätzt)</div>
+            </div>
+            <div class="range-toggle">
+              <button class="range-btn active" data-range="30">30 Tage</button>
+              <button class="range-btn" data-range="all">Gesamt</button>
+            </div>
           </div>
-          <div id="chart-container">
-            <canvas id="chart"></canvas>
+          <div id="chart-container-body">
+            <canvas id="bodyChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Verlauf Energie -->
+        <section class="card">
+          <div class="card-title-row">
+            <div>
+              <div class="card-title">Verlauf Energie & Aktivität</div>
+              <div class="card-sub">Kalorien, Leistungsumsatz, Bilanz</div>
+            </div>
+          </div>
+          <div id="chart-container-energy">
+            <canvas id="energyChart"></canvas>
           </div>
         </section>
 
         <!-- Tabelle -->
         <section class="card">
-          <div class="card-title">
-            Alle Einträge
+          <div class="card-title-row">
+            <div class="card-title">Alle Einträge (aktueller Zeitraum)</div>
           </div>
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr>
                   <th>Datum</th>
-                  <th>Bauch (cm)</th>
-                  <th>Ø 30 T Bauch</th>
-                  <th>Gewicht (kg)</th>
-                  <th>Ø 30 T Gew.</th>
+                  <th>Bauch</th>
+                  <th>Gewicht</th>
+                  <th>KF-%</th>
+                  <th>kcal</th>
+                  <th>TDEE</th>
+                  <th>Bilanz</th>
+                  <th>Schritte</th>
+                  <th>Kraft</th>
                 </tr>
               </thead>
               <tbody id="entries-tbody">
@@ -470,102 +563,126 @@
           </div>
           <div class="button-row">
             <button id="export-csv" class="secondary small">CSV exportieren</button>
-            <button id="clear-data" class="danger small">Alle Daten löschen</button>
+            <button id="clear-data" class="danger small">Alle Tagesdaten löschen</button>
           </div>
           <p class="footer-note">
-            CSV kannst du z. B. in Excel, Numbers oder Google Sheets öffnen.
+            CSV enthält alle Tage und alle berechneten Werte (auch Körperfett-Schätzung, Grund-/Leistungsumsatz, Kalorienbilanz).
           </p>
         </section>
       </div>
 
-      <!-- Rechte Spalte: Kennzahlen + Statistik -->
+      <!-- RECHTE SPALTE: Einstellungen + Kennzahlen + Zusammenfassung -->
       <div>
-        <!-- Kennzahlen -->
+        <!-- Einstellungen Körperdaten -->
         <section class="card">
-          <div class="card-title">
-            Aktuelle Werte
+          <div class="card-title-row">
+            <div class="card-title">Einstellungen (Körper & Aktivität)</div>
+          </div>
+          <form id="settings-form">
+            <div class="field-group">
+              <div class="field">
+                <label for="gender">Geschlecht</label>
+                <select id="gender">
+                  <option value="male">Mann</option>
+                  <option value="female">Frau</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="age">Alter (Jahre)</label>
+                <input type="number" id="age" min="10" max="100" />
+              </div>
+            </div>
+            <div class="field-group">
+              <div class="field">
+                <label for="height">Körpergröße (cm)</label>
+                <input type="number" id="height" step="1" />
+              </div>
+              <div class="field">
+                <label for="activity">Aktivitätsfaktor</label>
+                <select id="activity">
+                  <option value="1.2">1,2 – kaum Bewegung</option>
+                  <option value="1.375">1,375 – leicht aktiv</option>
+                  <option value="1.55">1,55 – moderat aktiv</option>
+                  <option value="1.725">1,725 – sehr aktiv</option>
+                  <option value="1.9">1,9 – extrem aktiv</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="secondary small">Einstellungen speichern</button>
+          </form>
+          <p class="footer-note">
+            Wird für Grundumsatz, Leistungsumsatz und Körperfett-Schätzung genutzt.
+          </p>
+        </section>
+
+        <!-- Kennzahlen aktuell -->
+        <section class="card">
+          <div class="card-title-row">
+            <div class="card-title">Aktuelle Kennzahlen</div>
           </div>
           <div class="stats-grid">
             <div class="stat-box">
               <div class="stat-label">Letzter Bauchumfang</div>
               <div class="stat-value">
-                <span id="last-waist-actual">–</span>
-                <span class="stat-unit">cm</span>
+                <span id="last-waist">–</span><span class="stat-unit">cm</span>
               </div>
             </div>
-            <div class="stat-box">
-              <div class="stat-label">Ø Bauch 30 Tage</div>
-              <div class="stat-value">
-                <span id="waist-avg-30">–</span>
-                <span class="stat-unit">cm</span>
-              </div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Ø Bauch letztes Jahr</div>
-              <div class="stat-value">
-                <span id="waist-avg-365">–</span>
-                <span class="stat-unit">cm</span>
-              </div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Ø Bauch gesamt</div>
-              <div class="stat-value">
-                <span id="waist-avg-all">–</span>
-                <span class="stat-unit">cm</span>
-              </div>
-            </div>
-
             <div class="stat-box">
               <div class="stat-label">Letztes Gewicht</div>
               <div class="stat-value">
-                <span id="last-weight-actual">–</span>
-                <span class="stat-unit">kg</span>
+                <span id="last-weight">–</span><span class="stat-unit">kg</span>
               </div>
             </div>
             <div class="stat-box">
-              <div class="stat-label">Ø Gewicht 30 Tage</div>
+              <div class="stat-label">Letzte KF-Schätzung</div>
               <div class="stat-value">
-                <span id="weight-avg-30">–</span>
-                <span class="stat-unit">kg</span>
+                <span id="last-bf">–</span><span class="stat-unit">%</span>
               </div>
             </div>
             <div class="stat-box">
-              <div class="stat-label">Ø Gewicht letztes Jahr</div>
+              <div class="stat-label">Letzter Grundumsatz</div>
               <div class="stat-value">
-                <span id="weight-avg-365">–</span>
-                <span class="stat-unit">kg</span>
+                <span id="last-bmr">–</span><span class="stat-unit">kcal</span>
               </div>
             </div>
             <div class="stat-box">
-              <div class="stat-label">Ø Gewicht gesamt</div>
+              <div class="stat-label">Letzter Leistungsumsatz (TDEE)</div>
               <div class="stat-value">
-                <span id="weight-avg-all">–</span>
-                <span class="stat-unit">kg</span>
+                <span id="last-tdee">–</span><span class="stat-unit">kcal</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Letzte Kalorienbilanz</div>
+              <div class="stat-value">
+                <span id="last-balance">–</span><span class="stat-unit">kcal</span>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Statistik & Trends -->
+        <!-- Zusammenfassung 7 / 30 Tage -->
         <section class="card">
-          <div class="card-title">
-            Statistik & Trends
+          <div class="card-title-row">
+            <div class="card-title">Zusammenfassung</div>
           </div>
           <p class="summary-row">
-            <strong>Zeitraum:</strong>
+            <strong>Zeitraum gesamt:</strong>
             <span id="summary-period">–</span>
           </p>
           <p class="summary-row">
-            <strong>Bauchumfang:</strong>
+            <strong>Bauch:</strong>
             <span id="summary-waist">–</span>
           </p>
           <p class="summary-row">
-            <strong>Gewicht:</strong>
-            <span id="summary-weight">–</span>
+            <strong>Gewicht & KF-%:</strong>
+            <span id="summary-body">–</span>
+          </p>
+          <p class="summary-row">
+            <strong>Energie (Ø Defizit/Plus):</strong>
+            <span id="summary-energy">–</span>
           </p>
           <p class="footer-note">
-            Ø 30 Tage = gleitender Durchschnitt der letzten 30 Kalendertage.  
-            „Änderung 30 Tage“ = Differenz letzter Wert zu einem Wert von vor ca. 30 Tagen (falls vorhanden).
+            Ø-Werte werden aus den letzten 7 bzw. 30 Tagen berechnet (sofern Daten vorhanden sind).
           </p>
         </section>
       </div>
@@ -573,15 +690,20 @@
   </main>
 
   <script>
-    const STORAGE_KEY = 'bodyEntries_v3_purple';
+    const ENTRIES_KEY = 'bodyEntries_all_v1';
+    const SETTINGS_KEY = 'bodySettings_v1';
+    const WINDOW_7 = 7;
     const WINDOW_30 = 30;
     const WINDOW_365 = 365;
 
-    let chart = null;
+    let currentRange = '30'; // '30' oder 'all'
+    let bodyChart = null;
+    let energyChart = null;
 
+    // --- Storage ------------------------------------------------------------------
     function loadEntries() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(ENTRIES_KEY);
         if (!raw) return [];
         const arr = JSON.parse(raw);
         if (!Array.isArray(arr)) return [];
@@ -589,286 +711,325 @@
           .filter(e => e.date)
           .sort((a, b) => a.date.localeCompare(b.date));
       } catch (e) {
-        console.error('Fehler beim Laden:', e);
+        console.error('Fehler beim Laden der Einträge:', e);
         return [];
       }
     }
 
     function saveEntries(entries) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
     }
 
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) {
+          return {
+            gender: 'male',
+            age: 40,
+            height: 175,
+            activity: 1.55
+          };
+        }
+        const s = JSON.parse(raw);
+        return {
+          gender: s.gender || 'male',
+          age: Number(s.age) || 40,
+          height: Number(s.height) || 175,
+          activity: Number(s.activity) || 1.55
+        };
+      } catch {
+        return {
+          gender: 'male',
+          age: 40,
+          height: 175,
+          activity: 1.55
+        };
+      }
+    }
+
+    function saveSettings(settings) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    // --- Helpers ------------------------------------------------------------------
     function todayISO() {
       const d = new Date();
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      return `${y}-${m}-${day}`;
     }
 
-    function computeMovingAverage(entries, windowDays, field) {
-      const result = [];
-      if (!entries.length) return result;
-      const dates = entries.map(e => new Date(e.date));
-      for (let i = 0; i < entries.length; i++) {
-        const currentDate = dates[i];
-        let sum = 0;
-        let count = 0;
-        for (let j = 0; j <= i; j++) {
-          const diffDays = (currentDate - dates[j]) / (1000 * 60 * 60 * 24);
-          const value = entries[j][field];
-          if (diffDays <= windowDays - 1 && value != null && !isNaN(value)) {
-            sum += Number(value);
+    function formatNumber(value, decimals = 1) {
+      if (value == null || isNaN(value)) return '–';
+      return Number(value).toLocaleString('de-DE', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function formatInt(value) {
+      if (value == null || isNaN(value)) return '–';
+      return Math.round(Number(value)).toLocaleString('de-DE');
+    }
+
+    function formatDeltaKcal(value) {
+      if (value == null || isNaN(value)) return '–';
+      const v = Math.round(value);
+      const sign = v > 0 ? '+' : '';
+      return `${sign}${v.toLocaleString('de-DE')} kcal`;
+    }
+
+    function getEntriesForRange(entries, range) {
+      if (entries.length === 0) return [];
+      if (range === 'all') return entries;
+      const lastDate = new Date(entries[entries.length - 1].date);
+      const cutoff = new Date(lastDate);
+      cutoff.setDate(cutoff.getDate() - (WINDOW_30 - 1));
+      return entries.filter(e => new Date(e.date) >= cutoff);
+    }
+
+    function buildLabels(entries, range) {
+      const monthLetters = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+      return entries.map((e, idx) => {
+        const d = new Date(e.date + 'T00:00:00');
+        if (range === '30') {
+          const day = String(d.getDate()).padStart(2, '0');
+          const mon = String(d.getMonth() + 1).padStart(2, '0');
+          return `${day}.${mon}.`;
+        } else {
+          const m = monthLetters[d.getMonth()];
+          const prev = idx > 0 ? new Date(entries[idx - 1].date + 'T00:00:00') : null;
+          if (d.getDate() === 1) {
+            const yr = String(d.getFullYear()).slice(-2);
+            return `${m} ${yr}`;
+          }
+          if (!prev || prev.getMonth() !== d.getMonth()) {
+            return m;
+          }
+          return '';
+        }
+      });
+    }
+
+    // Körperfett-Formel nach Deurenberg (Schätzung über BMI & Alter)
+    function estimateBodyFat(weight, height, age, gender) {
+      if (!weight || !height || !age) return null;
+      const bmi = weight / Math.pow(height / 100, 2);
+      const base = 1.20 * bmi + 0.23 * age;
+      const genderCorr = gender === 'male' ? 16.2 : 5.4;
+      return base - genderCorr;
+    }
+
+    // Grundumsatz nach Mifflin-St Jeor, TDEE über Aktivitätsfaktor
+    function computeBMR(weight, height, age, gender) {
+      if (!weight || !height || !age) return null;
+      const base = 10 * weight + 6.25 * height - 5 * age;
+      return gender === 'male' ? base + 5 : base - 161;
+    }
+
+    function averageOverDays(entries, days, accessor) {
+      if (entries.length === 0) return null;
+      const lastDate = new Date(entries[entries.length - 1].date);
+      const cutoff = new Date(lastDate);
+      cutoff.setDate(cutoff.getDate() - (days - 1));
+      let sum = 0;
+      let count = 0;
+      entries.forEach(e => {
+        const d = new Date(e.date);
+        if (d >= cutoff) {
+          const v = accessor(e);
+          if (v != null && !isNaN(v)) {
+            sum += Number(v);
             count++;
           }
         }
-        result.push(count ? sum / count : null);
-      }
-      return result;
-    }
-
-    function computeCumulativeAverage(entries, field) {
-      const result = [];
-      let sum = 0;
-      let count = 0;
-      for (let i = 0; i < entries.length; i++) {
-        const value = entries[i][field];
-        if (value != null && !isNaN(value)) {
-          sum += Number(value);
-          count++;
-        }
-        result.push(count ? sum / count : null);
-      }
-      return result;
-    }
-
-    function formatNumber(value) {
-      if (value == null || isNaN(value)) return '–';
-      return Number(value).toLocaleString('de-DE', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1
       });
+      return count ? sum / count : null;
     }
 
-    function formatDelta(value, unit) {
-      if (value == null || isNaN(value)) return 'Änderung 30 Tage: –';
-      const rounded = Number(value).toLocaleString('de-DE', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1
-      });
-      const sign = value > 0 ? '+' : '';
-      return `Änderung 30 Tage: ${sign}${rounded} ${unit}`;
-    }
-
-    function findValueAbout30DaysAgo(entries, field) {
-      if (!entries.length) return null;
-      const last = entries[entries.length - 1];
-      const lastDate = new Date(last.date);
-      const threshold = new Date(lastDate);
-      threshold.setDate(threshold.getDate() - 30);
-
-      let candidate = null;
-      for (let i = entries.length - 1; i >= 0; i--) {
-        const d = new Date(entries[i].date);
-        if (d <= threshold) {
-          candidate = entries[i];
-          break;
-        }
-      }
-      if (!candidate) candidate = entries[0];
-      const value = candidate[field];
-      return value != null && !isNaN(value) ? Number(value) : null;
-    }
-
-    function computeMinMax(entries, field) {
-      let min = null;
-      let max = null;
-      entries.forEach(e => {
-        const v = e[field];
-        if (v == null || isNaN(v)) return;
-        const val = Number(v);
-        if (min == null || val < min) min = val;
-        if (max == null || val > max) max = val;
-      });
-      return { min, max };
-    }
-
+    // --- Render -------------------------------------------------------------------
     function render() {
-      const entries = loadEntries();
+      const entriesAll = loadEntries();
+      const settings = loadSettings();
+
       const tbody = document.getElementById('entries-tbody');
 
-      const lastWaistActualSpan = document.getElementById('last-waist-actual');
-      const waistAvg30Span = document.getElementById('waist-avg-30');
-      const waistAvg365Span = document.getElementById('waist-avg-365');
-      const waistAvgAllSpan = document.getElementById('waist-avg-all');
-
-      const lastWeightActualSpan = document.getElementById('last-weight-actual');
-      const weightAvg30Span = document.getElementById('weight-avg-30');
-      const weightAvg365Span = document.getElementById('weight-avg-365');
-      const weightAvgAllSpan = document.getElementById('weight-avg-all');
+      const lastWaistSpan = document.getElementById('last-waist');
+      const lastWeightSpan = document.getElementById('last-weight');
+      const lastBfSpan = document.getElementById('last-bf');
+      const lastBmrSpan = document.getElementById('last-bmr');
+      const lastTdeeSpan = document.getElementById('last-tdee');
+      const lastBalanceSpan = document.getElementById('last-balance');
 
       const summaryPeriodSpan = document.getElementById('summary-period');
       const summaryWaistSpan = document.getElementById('summary-waist');
-      const summaryWeightSpan = document.getElementById('summary-weight');
+      const summaryBodySpan = document.getElementById('summary-body');
+      const summaryEnergySpan = document.getElementById('summary-energy');
 
       tbody.innerHTML = '';
 
-      if (entries.length === 0) {
-        lastWaistActualSpan.textContent = '–';
-        waistAvg30Span.textContent = '–';
-        waistAvg365Span.textContent = '–';
-        waistAvgAllSpan.textContent = '–';
-        lastWeightActualSpan.textContent = '–';
-        weightAvg30Span.textContent = '–';
-        weightAvg365Span.textContent = '–';
-        weightAvgAllSpan.textContent = '–';
+      if (entriesAll.length === 0) {
+        lastWaistSpan.textContent = '–';
+        lastWeightSpan.textContent = '–';
+        lastBfSpan.textContent = '–';
+        lastBmrSpan.textContent = '–';
+        lastTdeeSpan.textContent = '–';
+        lastBalanceSpan.textContent = '–';
+
         summaryPeriodSpan.textContent = '–';
         summaryWaistSpan.textContent = '–';
-        summaryWeightSpan.textContent = '–';
+        summaryBodySpan.textContent = '–';
+        summaryEnergySpan.textContent = '–';
 
-        if (chart) {
-          chart.data.labels = [];
-          chart.data.datasets.forEach(ds => ds.data = []);
-          chart.update();
+        if (bodyChart) {
+          bodyChart.data.labels = [];
+          bodyChart.data.datasets.forEach(ds => ds.data = []);
+          bodyChart.update();
+        }
+        if (energyChart) {
+          energyChart.data.labels = [];
+          energyChart.data.datasets.forEach(ds => ds.data = []);
+          energyChart.update();
         }
         return;
       }
 
-      const waistAvg30 = computeMovingAverage(entries, WINDOW_30, 'waist');
-      const waistAvg365 = computeMovingAverage(entries, WINDOW_365, 'waist');
-      const waistAvgAll = computeCumulativeAverage(entries, 'waist');
+      // abgeleitete Werte pro Eintrag
+      let lastKnownWeight = null;
+      const derivedAll = entriesAll.map(e => {
+        let weight = e.weight != null && !isNaN(e.weight) ? Number(e.weight) : null;
+        if (weight == null && lastKnownWeight != null) {
+          weight = lastKnownWeight;
+        }
+        if (weight != null) lastKnownWeight = weight;
 
-      const weightAvg30 = computeMovingAverage(entries, WINDOW_30, 'weight');
-      const weightAvg365 = computeMovingAverage(entries, WINDOW_365, 'weight');
-      const weightAvgAll = computeCumulativeAverage(entries, 'weight');
+        const waist = e.waist != null && !isNaN(e.waist) ? Number(e.waist) : null;
+        const calories = e.calories != null && !isNaN(e.calories) ? Number(e.calories) : null;
+        const steps = e.steps != null && !isNaN(e.steps) ? Number(e.steps) : null;
+        const strength = !!e.strength;
 
-      entries.forEach((e, idx) => {
+        const bf = weight ? estimateBodyFat(weight, settings.height, settings.age, settings.gender) : null;
+        const bmr = weight ? computeBMR(weight, settings.height, settings.age, settings.gender) : null;
+        const tdee = bmr != null ? bmr * settings.activity : null;
+        const balance = (calories != null && tdee != null) ? (calories - tdee) : null;
+
+        return {
+          ...e,
+          weight,
+          waist,
+          calories,
+          steps,
+          strength,
+          bf,
+          bmr,
+          tdee,
+          balance
+        };
+      });
+
+      const first = derivedAll[0];
+      const last = derivedAll[derivedAll.length - 1];
+
+      summaryPeriodSpan.textContent = `${first.date} – ${last.date} (${derivedAll.length} Tage)`;
+
+      // aktuelle Kennzahlen (letzter Tag mit Daten)
+      lastWaistSpan.textContent = formatNumber(last.waist);
+      lastWeightSpan.textContent = formatNumber(last.weight);
+      lastBfSpan.textContent = formatNumber(last.bf);
+      lastBmrSpan.textContent = formatInt(last.bmr);
+      lastTdeeSpan.textContent = formatInt(last.tdee);
+      lastBalanceSpan.textContent = formatDeltaKcal(last.balance);
+
+      // Zusammenfassung
+      const minWaist = Math.min(...derivedAll.filter(d => d.waist != null).map(d => d.waist));
+      const maxWaist = Math.max(...derivedAll.filter(d => d.waist != null).map(d => d.waist));
+      summaryWaistSpan.textContent =
+        `Ø 30T: ${formatNumber(averageOverDays(derivedAll, WINDOW_30, d => d.waist))} cm | ` +
+        `Min: ${formatNumber(minWaist)} cm | Max: ${formatNumber(maxWaist)} cm`;
+
+      const avgBf30 = averageOverDays(derivedAll, WINDOW_30, d => d.bf);
+      summaryBodySpan.textContent =
+        `Ø Gewicht 30T: ${formatNumber(averageOverDays(derivedAll, WINDOW_30, d => d.weight))} kg | ` +
+        `Ø KF-% 30T: ${formatNumber(avgBf30)} %`;
+
+      const avgDef7 = averageOverDays(derivedAll, WINDOW_7, d => d.balance);
+      const avgDef30 = averageOverDays(derivedAll, WINDOW_30, d => d.balance);
+      summaryEnergySpan.textContent =
+        `Ø Bilanz 7T: ${formatDeltaKcal(avgDef7)} | Ø Bilanz 30T: ${formatDeltaKcal(avgDef30)}`;
+
+      // Tabelle (gefiltert nach currentRange)
+      const rangeEntries = getEntriesForRange(derivedAll, currentRange);
+      rangeEntries.forEach(e => {
         const tr = document.createElement('tr');
 
-        const tdDate = document.createElement('td');
-        tdDate.textContent = e.date;
-
-        const tdWaist = document.createElement('td');
-        tdWaist.textContent = formatNumber(e.waist);
-
-        const tdWaistAvg30 = document.createElement('td');
-        tdWaistAvg30.textContent = formatNumber(waistAvg30[idx]);
-
-        const tdWeight = document.createElement('td');
-        tdWeight.textContent = formatNumber(e.weight);
-
-        const tdWeightAvg30 = document.createElement('td');
-        tdWeightAvg30.textContent = formatNumber(weightAvg30[idx]);
+        const tdDate = document.createElement('td'); tdDate.textContent = e.date;
+        const tdWaist = document.createElement('td'); tdWaist.textContent = formatNumber(e.waist);
+        const tdWeight = document.createElement('td'); tdWeight.textContent = formatNumber(e.weight);
+        const tdBf = document.createElement('td'); tdBf.textContent = formatNumber(e.bf);
+        const tdCal = document.createElement('td'); tdCal.textContent = formatInt(e.calories);
+        const tdTdee = document.createElement('td'); tdTdee.textContent = formatInt(e.tdee);
+        const tdBal = document.createElement('td'); tdBal.textContent = formatDeltaKcal(e.balance);
+        const tdSteps = document.createElement('td'); tdSteps.textContent = formatInt(e.steps);
+        const tdStrength = document.createElement('td'); tdStrength.textContent = e.strength ? 'Ja' : '–';
 
         tr.appendChild(tdDate);
         tr.appendChild(tdWaist);
-        tr.appendChild(tdWaistAvg30);
         tr.appendChild(tdWeight);
-        tr.appendChild(tdWeightAvg30);
+        tr.appendChild(tdBf);
+        tr.appendChild(tdCal);
+        tr.appendChild(tdTdee);
+        tr.appendChild(tdBal);
+        tr.appendChild(tdSteps);
+        tr.appendChild(tdStrength);
 
         tbody.appendChild(tr);
       });
 
-      const lastEntry = entries[entries.length - 1];
+      // Charts
+      const labels = buildLabels(rangeEntries, currentRange);
 
-      lastWaistActualSpan.textContent = formatNumber(lastEntry.waist);
-      waistAvg30Span.textContent = formatNumber(waistAvg30[waistAvg30.length - 1]);
-      waistAvg365Span.textContent = formatNumber(waistAvg365[waistAvg365.length - 1]);
-      waistAvgAllSpan.textContent = formatNumber(waistAvgAll[waistAvgAll.length - 1]);
+      const waistData = rangeEntries.map(e => e.waist);
+      const weightData = rangeEntries.map(e => e.weight);
+      const bfData = rangeEntries.map(e => e.bf);
 
-      lastWeightActualSpan.textContent = formatNumber(lastEntry.weight);
-      weightAvg30Span.textContent = formatNumber(weightAvg30[weightAvg30.length - 1]);
-      weightAvg365Span.textContent = formatNumber(weightAvg365[weightAvg365.length - 1]);
-      weightAvgAllSpan.textContent = formatNumber(weightAvgAll[weightAvgAll.length - 1]);
+      const caloriesData = rangeEntries.map(e => e.calories);
+      const tdeeData = rangeEntries.map(e => e.tdee);
+      const balanceData = rangeEntries.map(e => e.balance);
 
-      const firstEntry = entries[0];
-      summaryPeriodSpan.textContent = `${firstEntry.date} – ${lastEntry.date} (${entries.length} Messungen)`;
-
-      const waistMinMax = computeMinMax(entries, 'waist');
-      const waistAvgAllLast = waistAvgAll[waistAvgAll.length - 1];
-      const waistPast30 = findValueAbout30DaysAgo(entries, 'waist');
-      let waistDelta30 = null;
-      if (waistPast30 != null && lastEntry.waist != null && !isNaN(lastEntry.waist)) {
-        waistDelta30 = Number(lastEntry.waist) - waistPast30;
-      }
-      const waistStatsParts = [];
-      waistStatsParts.push(`Ø gesamt: ${formatNumber(waistAvgAllLast)} cm`);
-      waistStatsParts.push(`Min: ${formatNumber(waistMinMax.min)} cm`);
-      waistStatsParts.push(`Max: ${formatNumber(waistMinMax.max)} cm`);
-      waistStatsParts.push(formatDelta(waistDelta30, 'cm'));
-      summaryWaistSpan.textContent = waistStatsParts.join(' | ');
-
-      const weightMinMax = computeMinMax(entries, 'weight');
-      const weightAvgAllLast = weightAvgAll[weightAvgAll.length - 1];
-      const weightPast30 = findValueAbout30DaysAgo(entries, 'weight');
-      let weightDelta30 = null;
-      if (weightPast30 != null && lastEntry.weight != null && !isNaN(lastEntry.weight)) {
-        weightDelta30 = Number(lastEntry.weight) - weightPast30;
-      }
-      const weightStatsParts = [];
-      if (weightAvgAllLast != null && !isNaN(weightAvgAllLast)) {
-        weightStatsParts.push(`Ø gesamt: ${formatNumber(weightAvgAllLast)} kg`);
-      } else {
-        weightStatsParts.push('Ø gesamt: –');
-      }
-      if (weightMinMax.min != null) {
-        weightStatsParts.push(`Min: ${formatNumber(weightMinMax.min)} kg`);
-        weightStatsParts.push(`Max: ${formatNumber(weightMinMax.max)} kg`);
-      } else {
-        weightStatsParts.push('Min: –');
-        weightStatsParts.push('Max: –');
-      }
-      weightStatsParts.push(formatDelta(weightDelta30, 'kg'));
-      summaryWeightSpan.textContent = weightStatsParts.join(' | ');
-
-      const labels = entries.map(e => e.date);
-      const dataWaist = entries.map(e => e.waist != null ? Number(e.waist) : null);
-      const dataWaist30 = waistAvg30.map(v => v != null ? Number(v) : null);
-      const dataWeight = entries.map(e => e.weight != null ? Number(e.weight) : null);
-      const dataWeight30 = weightAvg30.map(v => v != null ? Number(v) : null);
-
-      if (!chart) {
-        const ctx = document.getElementById('chart').getContext('2d');
-        chart = new Chart(ctx, {
+      if (!bodyChart) {
+        const ctx = document.getElementById('bodyChart').getContext('2d');
+        bodyChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: labels,
+            labels,
             datasets: [
               {
                 label: 'Bauch (cm)',
-                data: dataWaist,
+                data: waistData,
                 borderColor: '#c4b5fd',
-                backgroundColor: 'rgba(196, 181, 253, 0.18)',
+                backgroundColor: 'rgba(196,181,253,0.15)',
                 borderWidth: 2,
                 tension: 0.25,
                 pointRadius: 2
-              },
-              {
-                label: 'Ø Bauch 30 Tage',
-                data: dataWaist30,
-                borderColor: '#facc15',
-                backgroundColor: 'rgba(250, 204, 21, 0.06)',
-                borderWidth: 2,
-                borderDash: [4, 4],
-                tension: 0.25,
-                pointRadius: 0
               },
               {
                 label: 'Gewicht (kg)',
-                data: dataWeight,
+                data: weightData,
                 borderColor: '#f97316',
-                backgroundColor: 'rgba(249, 115, 22, 0.18)',
+                backgroundColor: 'rgba(249,115,22,0.14)',
                 borderWidth: 2,
                 tension: 0.25,
                 pointRadius: 2
               },
               {
-                label: 'Ø Gewicht 30 Tage',
-                data: dataWeight30,
-                borderColor: '#fed7aa',
-                backgroundColor: 'rgba(254, 215, 170, 0.06)',
+                label: 'KF-% (geschätzt)',
+                data: bfData,
+                borderColor: '#facc15',
+                backgroundColor: 'rgba(250,204,21,0.12)',
                 borderWidth: 2,
-                borderDash: [4, 4],
+                borderDash: [4,4],
                 tension: 0.25,
                 pointRadius: 0
               }
@@ -877,143 +1038,221 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-              mode: 'index',
-              intersect: false
-            },
+            interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: {
-                labels: {
-                  color: '#e5e7eb',
-                  boxWidth: 12,
-                  boxHeight: 12
-                }
+                labels: { color: '#e5e7eb', boxWidth: 12, boxHeight: 12 }
               }
             },
             scales: {
               x: {
-                ticks: {
-                  autoSkip: true,
-                  maxTicksLimit: 7,
-                  color: '#e5e7eb'
-                },
-                grid: {
-                  color: 'rgba(55, 65, 81, 0.6)'
-                }
+                ticks: { color: '#e5e7eb', autoSkip: true, maxTicksLimit: 8 },
+                grid: { color: 'rgba(55,65,81,0.7)' }
               },
               y: {
-                beginAtZero: false,
-                ticks: {
-                  color: '#e5e7eb'
-                },
-                grid: {
-                  color: 'rgba(55, 65, 81, 0.6)'
-                }
+                ticks: { color: '#e5e7eb' },
+                grid: { color: 'rgba(55,65,81,0.7)' },
+                beginAtZero: false
               }
             }
           }
         });
       } else {
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = dataWaist;
-        chart.data.datasets[1].data = dataWaist30;
-        chart.data.datasets[2].data = dataWeight;
-        chart.data.datasets[3].data = dataWeight30;
-        chart.update();
+        bodyChart.data.labels = labels;
+        bodyChart.data.datasets[0].data = waistData;
+        bodyChart.data.datasets[1].data = weightData;
+        bodyChart.data.datasets[2].data = bfData;
+        bodyChart.update();
+      }
+
+      if (!energyChart) {
+        const ctx2 = document.getElementById('energyChart').getContext('2d');
+        energyChart = new Chart(ctx2, {
+          data: {
+            labels,
+            datasets: [
+              {
+                type: 'line',
+                label: 'Leistungsumsatz (TDEE)',
+                data: tdeeData,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56,189,248,0.18)',
+                borderWidth: 2,
+                tension: 0.25,
+                pointRadius: 2,
+                yAxisID: 'y'
+              },
+              {
+                type: 'line',
+                label: 'Kalorien gegessen',
+                data: caloriesData,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,0.16)',
+                borderWidth: 2,
+                tension: 0.25,
+                pointRadius: 2,
+                yAxisID: 'y'
+              },
+              {
+                type: 'bar',
+                label: 'Bilanz (kcal)',
+                data: balanceData,
+                borderColor: '#facc15',
+                backgroundColor: 'rgba(250,204,21,0.4)',
+                borderWidth: 1,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                labels: { color: '#e5e7eb', boxWidth: 12, boxHeight: 12 }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#e5e7eb', autoSkip: true, maxTicksLimit: 8 },
+                grid: { color: 'rgba(55,65,81,0.7)' }
+              },
+              y: {
+                position: 'left',
+                ticks: { color: '#e5e7eb' },
+                grid: { color: 'rgba(55,65,81,0.7)' }
+              },
+              y1: {
+                position: 'right',
+                ticks: { color: '#facc15' },
+                grid: { drawOnChartArea: false }
+              }
+            }
+          }
+        });
+      } else {
+        energyChart.data.labels = labels;
+        energyChart.data.datasets[0].data = tdeeData;
+        energyChart.data.datasets[1].data = caloriesData;
+        energyChart.data.datasets[2].data = balanceData;
+        energyChart.update();
       }
     }
 
-    function initForm() {
+    // --- Init Forms ---------------------------------------------------------------
+    function initEntryForm() {
       const form = document.getElementById('entry-form');
       const dateInput = document.getElementById('date');
       const waistInput = document.getElementById('waist');
       const weightInput = document.getElementById('weight');
+      const caloriesInput = document.getElementById('calories');
+      const stepsInput = document.getElementById('steps');
+      const strengthInput = document.getElementById('strength');
       const clearBtn = document.getElementById('clear-data');
       const exportBtn = document.getElementById('export-csv');
 
       dateInput.value = todayISO();
 
-      form.addEventListener('submit', function (e) {
+      form.addEventListener('submit', e => {
         e.preventDefault();
         const date = dateInput.value || todayISO();
 
         const waistRaw = String(waistInput.value || '').replace(',', '.');
         const waist = parseFloat(waistRaw);
-
         if (isNaN(waist)) {
-          alert('Bitte einen gültigen Bauchumfang eingeben.');
+          alert('Bitte mindestens einen gültigen Bauchumfang eingeben.');
           return;
         }
 
-        const weightRaw = String(weightInput.value || '').replace(',', '.');
-        const weight = parseFloat(weightRaw);
-        const hasWeight = !isNaN(weight);
+        function parseField(input) {
+          const raw = String(input.value || '').replace(',', '.');
+          const v = parseFloat(raw);
+          return isNaN(v) ? null : v;
+        }
+
+        const weight = parseField(weightInput);
+        const calories = parseField(caloriesInput);
+        const steps = parseField(stepsInput);
+        const strength = !!strengthInput.checked;
 
         let entries = loadEntries();
-        const existingIndex = entries.findIndex(e => e.date === date);
-        if (existingIndex >= 0) {
-          entries[existingIndex].waist = waist;
-          if (hasWeight) {
-            entries[existingIndex].weight = weight;
-          }
+        const idx = entries.findIndex(e => e.date === date);
+        const newEntry = { date, waist, weight, calories, steps, strength };
+
+        if (idx >= 0) {
+          entries[idx] = { ...entries[idx], ...newEntry };
         } else {
-          const entry = { date: date, waist: waist };
-          if (hasWeight) {
-            entry.weight = weight;
-          }
-          entries.push(entry);
+          entries.push(newEntry);
         }
         saveEntries(entries);
+
         waistInput.value = '';
-        weightInput.value = '';
+        // weight/kalorien/schritte nicht leeren, falls du am Tag nachträglich ergänzt
+        strengthInput.checked = false;
+
         render();
       });
 
-      clearBtn.addEventListener('click', function () {
-        if (confirm('Alle gespeicherten Daten wirklich löschen?')) {
-          localStorage.removeItem(STORAGE_KEY);
+      clearBtn.addEventListener('click', () => {
+        if (confirm('Alle gespeicherten Tagesdaten wirklich löschen?')) {
+          localStorage.removeItem(ENTRIES_KEY);
           render();
         }
       });
 
-      exportBtn.addEventListener('click', function () {
-        const entries = loadEntries();
-        if (!entries.length) {
+      exportBtn.addEventListener('click', () => {
+        const entriesAll = loadEntries();
+        if (!entriesAll.length) {
           alert('Keine Daten zum Exportieren.');
           return;
         }
+        const settings = loadSettings();
 
-        const waistAvg30 = computeMovingAverage(entries, WINDOW_30, 'waist');
-        const waistAvg365 = computeMovingAverage(entries, WINDOW_365, 'waist');
-        const waistAvgAll = computeCumulativeAverage(entries, 'waist');
-        const weightAvg30 = computeMovingAverage(entries, WINDOW_30, 'weight');
-        const weightAvg365 = computeMovingAverage(entries, WINDOW_365, 'weight');
-        const weightAvgAll = computeCumulativeAverage(entries, 'weight');
+        // gleiche Ableitung wie im Render, damit CSV alles enthält
+        let lastWeight = null;
+        const derived = entriesAll.map(e => {
+          let weight = e.weight != null && !isNaN(e.weight) ? Number(e.weight) : null;
+          if (weight == null && lastWeight != null) weight = lastWeight;
+          if (weight != null) lastWeight = weight;
 
-        function formatCSV(value) {
-          if (value == null || isNaN(value)) return '';
-          return Number(value).toLocaleString('de-DE', {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1
+          const waist = e.waist != null && !isNaN(e.waist) ? Number(e.waist) : null;
+          const calories = e.calories != null && !isNaN(e.calories) ? Number(e.calories) : null;
+          const steps = e.steps != null && !isNaN(e.steps) ? Number(e.steps) : null;
+          const strength = !!e.strength;
+
+          const bf = weight ? estimateBodyFat(weight, settings.height, settings.age, settings.gender) : null;
+          const bmr = weight ? computeBMR(weight, settings.height, settings.age, settings.gender) : null;
+          const tdee = bmr != null ? bmr * settings.activity : null;
+          const balance = (calories != null && tdee != null) ? (calories - tdee) : null;
+
+          return { date: e.date, waist, weight, bf, calories, bmr, tdee, balance, steps, strength };
+        });
+
+        function csvNum(v, decimals = 1) {
+          if (v == null || isNaN(v)) return '';
+          return Number(v).toLocaleString('de-DE', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
           });
         }
 
         const lines = [];
-        lines.push('Datum;Bauch (cm);Ø 30T Bauch;Ø 365T Bauch;Ø gesamt Bauch;Gewicht (kg);Ø 30T Gew.;Ø 365T Gew.;Ø gesamt Gew.');
+        lines.push('Datum;Bauch(cm);Gewicht(kg);KF%(schätz);Kalorien;kcal_BMR;kcal_TDEE;Bilanz;kcal;Schritte;Krafttraining');
 
-        entries.forEach((e, idx) => {
-          const parts = [
-            e.date,
-            formatCSV(e.waist),
-            formatCSV(waistAvg30[idx]),
-            formatCSV(waistAvg365[idx]),
-            formatCSV(waistAvgAll[idx]),
-            formatCSV(e.weight),
-            formatCSV(weightAvg30[idx]),
-            formatCSV(weightAvg365[idx]),
-            formatCSV(weightAvgAll[idx])
-          ];
-          lines.push(parts.join(';'));
+        derived.forEach(d => {
+          lines.push([
+            d.date,
+            csvNum(d.waist),
+            csvNum(d.weight),
+            csvNum(d.bf),
+            csvNum(d.calories, 0),
+            csvNum(d.bmr, 0),
+            csvNum(d.tdee, 0),
+            csvNum(d.balance, 0),
+            csvNum(d.steps, 0),
+            d.strength ? 'Ja' : ''
+          ].join(';'));
         });
 
         const csvContent = lines.join('\r\n');
@@ -1021,7 +1260,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'body-tracker-bauch-gewicht.csv';
+        a.download = 'body-dashboard.csv';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1029,8 +1268,48 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      initForm();
+    function initSettingsForm() {
+      const form = document.getElementById('settings-form');
+      const genderInput = document.getElementById('gender');
+      const ageInput = document.getElementById('age');
+      const heightInput = document.getElementById('height');
+      const activityInput = document.getElementById('activity');
+
+      const s = loadSettings();
+      genderInput.value = s.gender;
+      ageInput.value = s.age;
+      heightInput.value = s.height;
+      activityInput.value = s.activity;
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const newSettings = {
+          gender: genderInput.value || 'male',
+          age: Number(ageInput.value) || s.age,
+          height: Number(heightInput.value) || s.height,
+          activity: Number(activityInput.value) || s.activity
+        };
+        saveSettings(newSettings);
+        render();
+      });
+    }
+
+    function initRangeToggle() {
+      const buttons = document.querySelectorAll('.range-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentRange = btn.dataset.range || '30';
+          render();
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initEntryForm();
+      initSettingsForm();
+      initRangeToggle();
       render();
     });
   </script>
