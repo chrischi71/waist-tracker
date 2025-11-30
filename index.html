@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bauchumfang & Gewicht Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      /* Farbschema – hier kannst du leicht anpassen */
+      --primary: #0f766e;       /* Hauptfarbe (z.B. Türkis/Grün) */
+      --primary-light: #ccfbf1; /* helle Variante */
+      --accent: #f97316;        /* Akzent (Orange) */
+      --bg: #f3f4f6;            /* Seitenhintergrund */
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --text-main: #111827;
+      --text-soft: #6b7280;
+      --danger: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    .topbar {
+      background: linear-gradient(90deg, var(--primary), #22c55e);
+      color: #ffffff;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.3);
+    }
+
+    .topbar-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .app-shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .card-title span {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .hero {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .hero-text {
+      flex: 1;
+    }
+
+    .hero-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .hero-text p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+    }
+
+    .hero-badge-row {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .hero-badge {
+      font-size: 0.75rem;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .hero-image-wrapper {
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 2px solid var(--primary-light);
+      flex-shrink: 0;
+    }
+
+    .hero-image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .hero {
+        flex-direction: row-reverse;
+      }
+      .hero-image-wrapper {
+        width: 90px;
+        height: 90px;
+      }
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+
+    .field-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .field-group .field {
+      flex: 1;
+    }
+
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      transition: border 0.15s, background 0.15s, box-shadow 0.15s;
+    }
+
+    input[type="date"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      outline: none;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18);
+    }
+
+    button {
+      padding: 9px 14px;
+      font-size: 0.9rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      margin-top: 6px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.danger {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    button.small {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .stat-box {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 8px 9px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .stat-unit {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin-left: 4px;
+    }
+
+    #chart-container {
+      margin-top: 8px;
+      height: 260px;
+    }
+
+    #chart {
+      width: 100%;
+      height: 100%;
+    }
+
+    .table-wrapper {
+      max-height: 260px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      margin-top: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 6px 6px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+      padding-left: 9px;
+    }
+
+    th:last-child, td:last-child {
+      padding-right: 9px;
+    }
+
+    th {
+      background: #e5f3ef;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .footer-note {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      margin-top: 6px;
+    }
+
+    .summary-row {
+      font-size: 0.8rem;
+      margin: 4px 0;
+      color: #374151;
+    }
+
+    .summary-row strong {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">Bauchumfang & Gewicht Tracker</div>
+    <div class="topbar-subtitle">
+      Echte Messwerte, geglättete Trends – voll lokal, ohne Login, ohne Cloud.
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <div class="layout">
+      <!-- Linke Spalte: Eingabe + Verlauf -->
+      <div>
+        <!-- Hero + Eingabe -->
+        <section class="card">
+          <div class="hero">
+            <div class="hero-text">
+              <div class="hero-title">Dein Bauchumfang im Blick</div>
+              <p>
+                Trage deinen Bauchumfang und dein Gewicht ein, sieh die echte Kurve
+                und den 30-Tage-Trend – plus Jahres-Ø und Gesamt-Ø.
+              </p>
+              <div class="hero-badge-row">
+                <div class="hero-badge">Gleitender Ø 30 Tage</div>
+                <div class="hero-badge">Jahr & Gesamt-Statistik</div>
+                <div class="hero-badge">CSV-Export</div>
+              </div>
+            </div>
+            <div class="hero-image-wrapper">
+              <!-- WICHTIG: Ersetze die Datei "bauchumfang-hero.jpg" durch dein eigenes Bild im Repo -->
+              <img src="bauchumfang-hero.jpg" alt="Person misst Bauchumfang mit Maßband" />
+            </div>
+          </div>
+
+          <form id="entry-form">
+            <div class="field">
+              <label for="date">Datum</label>
+              <input type="date" id="date" />
+            </div>
+
+            <div class="field-group">
+              <div class="field">
+                <label for="waist">Bauchumfang (cm) *</label>
+                <input type="number" id="waist" step="0.1" required />
+              </div>
+              <div class="field">
+                <label for="weight">Gewicht (kg, optional)</label>
+                <input type="number" id="weight" step="0.1" />
+              </div>
+            </div>
+
+            <button type="submit" class="primary">
+              Eintrag speichern
+            </button>
+          </form>
+        </section>
+
+        <!-- Verlauf (Chart) -->
+        <section class="card">
+          <div class="card-title">
+            Verlauf
+            <span>Echte Werte + 30-Tage-Trend</span>
+          </div>
+          <div id="chart-container">
+            <canvas id="chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Tabelle -->
+        <section class="card">
+          <div class="card-title">
+            Alle Einträge
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Bauch (cm)</th>
+                  <th>Ø 30 T Bauch</th>
+                  <th>Gewicht (kg)</th>
+                  <th>Ø 30 T Gew.</th>
+                </tr>
+              </thead>
+              <tbody id="entries-tbody">
+                <!-- per JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="button-row">
+            <button id="export-csv" class="secondary small">CSV exportieren</button>
+            <button id="clear-data" class="danger small">Alle Daten löschen</button>
+          </div>
+          <p class="footer-note">
+            CSV kannst du z. B. in Excel, Numbers oder Google Sheets öffnen.
+          </p>
+        </section>
+      </div>
+
+      <!-- Rechte Spalte: Kennzahlen + Statistik -->
+      <div>
+        <!-- Kennzahlen -->
+        <section class="card">
+          <div class="card-title">
+            Aktuelle Werte
+          </div>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-label">Letzter Bauchumfang</div>
+              <div class="stat-value">
+                <span id="last-waist-actual">–</span>
+                <span class="stat-unit">cm</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ø Bauch 30 Tage</div>
+              <div class="stat-value">
+                <span id="waist-avg-30">–</span>
+                <span class="stat-unit">cm</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ø Bauch letztes Jahr</div>
+              <div class="stat-value">
+                <span id="waist-avg-365">–</span>
+                <span class="stat-unit">cm</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ø Bauch gesamt</div>
+              <div class="stat-value">
+                <span id="waist-avg-all">–</span>
+                <span class="stat-unit">cm</span>
+              </div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-label">Letztes Gewicht</div>
+              <div class="stat-value">
+                <span id="last-weight-actual">–</span>
+                <span class="stat-unit">kg</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ø Gewicht 30 Tage</div>
+              <div class="stat-value">
+                <span id="weight-avg-30">–</span>
+                <span class="stat-unit">kg</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ø Gewicht letztes Jahr</div>
+              <div class="stat-value">
+                <span id="weight-avg-365">–</span>
+                <span class="stat-unit">kg</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ø Gewicht gesamt</div>
+              <div class="stat-value">
+                <span id="weight-avg-all">–</span>
+                <span class="stat-unit">kg</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Statistik & Trends -->
+        <section class="card">
+          <div class="card-title">
+            Statistik & Trends
+          </div>
+          <p class="summary-row">
+            <strong>Zeitraum:</strong>
+            <span id="summary-period">–</span>
+          </p>
+          <p class="summary-row">
+            <strong>Bauchumfang:</strong>
+            <span id="summary-waist">–</span>
+          </p>
+          <p class="summary-row">
+            <strong>Gewicht:</strong>
+            <span id="summary-weight">–</span>
+          </p>
+          <p class="footer-note">
+            Ø 30 Tage = gleitender Durchschnitt der letzten 30 Kalendertage.  
+            „Änderung 30 Tage“ = Differenz letzter Wert zu einem Wert von vor ca. 30 Tagen (falls vorhanden).
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'bodyEntries_v3_styled';
+    const WINDOW_30 = 30;
+    const WINDOW_365 = 365;
+
+    let chart = null;
+
+    function loadEntries() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return [];
+        return arr
+          .filter(e => e.date)
+          .sort((a, b) => a.date.localeCompare(b.date));
+      } catch (e) {
+        console.error('Fehler beim Laden:', e);
+        return [];
+      }
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function computeMovingAverage(entries, windowDays, field) {
+      const result = [];
+      if (!entries.length) return result;
+      const dates = entries.map(e => new Date(e.date));
+      for (let i = 0; i < entries.length; i++) {
+        const currentDate = dates[i];
+        let sum = 0;
+        let count = 0;
+        for (let j = 0; j <= i; j++) {
+          const diffDays = (currentDate - dates[j]) / (1000 * 60 * 60 * 24);
+          const value = entries[j][field];
+          if (diffDays <= windowDays - 1 && value != null && !isNaN(value)) {
+            sum += Number(value);
+            count++;
+          }
+        }
+        result.push(count ? sum / count : null);
+      }
+      return result;
+    }
+
+    function computeCumulativeAverage(entries, field) {
+      const result = [];
+      let sum = 0;
+      let count = 0;
+      for (let i = 0; i < entries.length; i++) {
+        const value = entries[i][field];
+        if (value != null && !isNaN(value)) {
+          sum += Number(value);
+          count++;
+        }
+        result.push(count ? sum / count : null);
+      }
+      return result;
+    }
+
+    function formatNumber(value) {
+      if (value == null || isNaN(value)) return '–';
+      return Number(value).toLocaleString('de-DE', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+    }
+
+    function formatDelta(value, unit) {
+      if (value == null || isNaN(value)) return 'Änderung 30 Tage: –';
+      const rounded = Number(value).toLocaleString('de-DE', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+      const sign = value > 0 ? '+' : '';
+      return `Änderung 30 Tage: ${sign}${rounded} ${unit}`;
+    }
+
+    function findValueAbout30DaysAgo(entries, field) {
+      if (!entries.length) return null;
+      const last = entries[entries.length - 1];
+      const lastDate = new Date(last.date);
+      const threshold = new Date(lastDate);
+      threshold.setDate(threshold.getDate() - 30);
+
+      let candidate = null;
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const d = new Date(entries[i].date);
+        if (d <= threshold) {
+          candidate = entries[i];
+          break;
+        }
+      }
+      if (!candidate) candidate = entries[0];
+      const value = candidate[field];
+      return value != null && !isNaN(value) ? Number(value) : null;
+    }
+
+    function computeMinMax(entries, field) {
+      let min = null;
+      let max = null;
+      entries.forEach(e => {
+        const v = e[field];
+        if (v == null || isNaN(v)) return;
+        const val = Number(v);
+        if (min == null || val < min) min = val;
+        if (max == null || val > max) max = val;
+      });
+      return { min, max };
+    }
+
+    function render() {
+      const entries = loadEntries();
+      const tbody = document.getElementById('entries-tbody');
+
+      const lastWaistActualSpan = document.getElementById('last-waist-actual');
+      const waistAvg30Span = document.getElementById('waist-avg-30');
+      const waistAvg365Span = document.getElementById('waist-avg-365');
+      const waistAvgAllSpan = document.getElementById('waist-avg-all');
+
+      const lastWeightActualSpan = document.getElementById('last-weight-actual');
+      const weightAvg30Span = document.getElementById('weight-avg-30');
+      const weightAvg365Span = document.getElementById('weight-avg-365');
+      const weightAvgAllSpan = document.getElementById('weight-avg-all');
+
+      const summaryPeriodSpan = document.getElementById('summary-period');
+      const summaryWaistSpan = document.getElementById('summary-waist');
+      const summaryWeightSpan = document.getElementById('summary-weight');
+
+      tbody.innerHTML = '';
+
+      if (entries.length === 0) {
+        lastWaistActualSpan.textContent = '–';
+        waistAvg30Span.textContent = '–';
+        waistAvg365Span.textContent = '–';
+        waistAvgAllSpan.textContent = '–';
+        lastWeightActualSpan.textContent = '–';
+        weightAvg30Span.textContent = '–';
+        weightAvg365Span.textContent = '–';
+        weightAvgAllSpan.textContent = '–';
+        summaryPeriodSpan.textContent = '–';
+        summaryWaistSpan.textContent = '–';
+        summaryWeightSpan.textContent = '–';
+
+        if (chart) {
+          chart.data.labels = [];
+          chart.data.datasets.forEach(ds => ds.data = []);
+          chart.update();
+        }
+        return;
+      }
+
+      const waistAvg30 = computeMovingAverage(entries, WINDOW_30, 'waist');
+      const waistAvg365 = computeMovingAverage(entries, WINDOW_365, 'waist');
+      const waistAvgAll = computeCumulativeAverage(entries, 'waist');
+
+      const weightAvg30 = computeMovingAverage(entries, WINDOW_30, 'weight');
+      const weightAvg365 = computeMovingAverage(entries, WINDOW_365, 'weight');
+      const weightAvgAll = computeCumulativeAverage(entries, 'weight');
+
+      entries.forEach((e, idx) => {
+        const tr = document.createElement('tr');
+
+        const tdDate = document.createElement('td');
+        tdDate.textContent = e.date;
+
+        const tdWaist = document.createElement('td');
+        tdWaist.textContent = formatNumber(e.waist);
+
+        const tdWaistAvg30 = document.createElement('td');
+        tdWaistAvg30.textContent = formatNumber(waistAvg30[idx]);
+
+        const tdWeight = document.createElement('td');
+        tdWeight.textContent = formatNumber(e.weight);
+
+        const tdWeightAvg30 = document.createElement('td');
+        tdWeightAvg30.textContent = formatNumber(weightAvg30[idx]);
+
+        tr.appendChild(tdDate);
+        tr.appendChild(tdWaist);
+        tr.appendChild(tdWaistAvg30);
+        tr.appendChild(tdWeight);
+        tr.appendChild(tdWeightAvg30);
+
+        tbody.appendChild(tr);
+      });
+
+      const lastEntry = entries[entries.length - 1];
+
+      lastWaistActualSpan.textContent = formatNumber(lastEntry.waist);
+      waistAvg30Span.textContent = formatNumber(waistAvg30[waistAvg30.length - 1]);
+      waistAvg365Span.textContent = formatNumber(waistAvg365[waistAvg365.length - 1]);
+      waistAvgAllSpan.textContent = formatNumber(waistAvgAll[waistAvgAll.length - 1]);
+
+      lastWeightActualSpan.textContent = formatNumber(lastEntry.weight);
+      weightAvg30Span.textContent = formatNumber(weightAvg30[weightAvg30.length - 1]);
+      weightAvg365Span.textContent = formatNumber(weightAvg365[weightAvg365.length - 1]);
+      weightAvgAllSpan.textContent = formatNumber(weightAvgAll[weightAvgAll.length - 1]);
+
+      const firstEntry = entries[0];
+      summaryPeriodSpan.textContent = `${firstEntry.date} – ${lastEntry.date} (${entries.length} Messungen)`;
+
+      const waistMinMax = computeMinMax(entries, 'waist');
+      const waistAvgAllLast = waistAvgAll[waistAvgAll.length - 1];
+      const waistPast30 = findValueAbout30DaysAgo(entries, 'waist');
+      let waistDelta30 = null;
+      if (waistPast30 != null && lastEntry.waist != null && !isNaN(lastEntry.waist)) {
+        waistDelta30 = Number(lastEntry.waist) - waistPast30;
+      }
+      const waistStatsParts = [];
+      waistStatsParts.push(`Ø gesamt: ${formatNumber(waistAvgAllLast)} cm`);
+      waistStatsParts.push(`Min: ${formatNumber(waistMinMax.min)} cm`);
+      waistStatsParts.push(`Max: ${formatNumber(waistMinMax.max)} cm`);
+      waistStatsParts.push(formatDelta(waistDelta30, 'cm'));
+      summaryWaistSpan.textContent = waistStatsParts.join(' | ');
+
+      const weightMinMax = computeMinMax(entries, 'weight');
+      const weightAvgAllLast = weightAvgAll[weightAvgAll.length - 1];
+      const weightPast30 = findValueAbout30DaysAgo(entries, 'weight');
+      let weightDelta30 = null;
+      if (weightPast30 != null && lastEntry.weight != null && !isNaN(lastEntry.weight)) {
+        weightDelta30 = Number(lastEntry.weight) - weightPast30;
+      }
+      const weightStatsParts = [];
+      if (weightAvgAllLast != null && !isNaN(weightAvgAllLast)) {
+        weightStatsParts.push(`Ø gesamt: ${formatNumber(weightAvgAllLast)} kg`);
+      } else {
+        weightStatsParts.push('Ø gesamt: –');
+      }
+      if (weightMinMax.min != null) {
+        weightStatsParts.push(`Min: ${formatNumber(weightMinMax.min)} kg`);
+        weightStatsParts.push(`Max: ${formatNumber(weightMinMax.max)} kg`);
+      } else {
+        weightStatsParts.push('Min: –');
+        weightStatsParts.push('Max: –');
+      }
+      weightStatsParts.push(formatDelta(weightDelta30, 'kg'));
+      summaryWeightSpan.textContent = weightStatsParts.join(' | ');
+
+      const labels = entries.map(e => e.date);
+      const dataWaist = entries.map(e => e.waist != null ? Number(e.waist) : null);
+      const dataWaist30 = waistAvg30.map(v => v != null ? Number(v) : null);
+      const dataWeight = entries.map(e => e.weight != null ? Number(e.weight) : null);
+      const dataWeight30 = weightAvg30.map(v => v != null ? Number(v) : null);
+
+      if (!chart) {
+        const ctx = document.getElementById('chart').getContext('2d');
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Bauch (cm)',
+                data: dataWaist,
+                borderColor: '#0f766e',
+                backgroundColor: 'rgba(15,118,110,0.08)',
+                borderWidth: 2,
+                tension: 0.25,
+                pointRadius: 2
+              },
+              {
+                label: 'Ø Bauch 30 Tage',
+                data: dataWaist30,
+                borderColor: '#14b8a6',
+                backgroundColor: 'rgba(20,184,166,0.04)',
+                borderWidth: 2,
+                borderDash: [4, 4],
+                tension: 0.25,
+                pointRadius: 0
+              },
+              {
+                label: 'Gewicht (kg)',
+                data: dataWeight,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,0.08)',
+                borderWidth: 2,
+                tension: 0.25,
+                pointRadius: 2
+              },
+              {
+                label: 'Ø Gewicht 30 Tage',
+                data: dataWeight30,
+                borderColor: '#fb923c',
+                backgroundColor: 'rgba(251,146,60,0.04)',
+                borderWidth: 2,
+                borderDash: [4, 4],
+                tension: 0.25,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  boxWidth: 12,
+                  boxHeight: 12
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  autoSkip: true,
+                  maxTicksLimit: 7
+                }
+              },
+              y: {
+                beginAtZero: false
+              }
+            }
+          }
+        });
+      } else {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = dataWaist;
+        chart.data.datasets[1].data = dataWaist30;
+        chart.data.datasets[2].data = dataWeight;
+        chart.data.datasets[3].data = dataWeight30;
+        chart.update();
+      }
+    }
+
+    function initForm() {
+      const form = document.getElementById('entry-form');
+      const dateInput = document.getElementById('date');
+      const waistInput = document.getElementById('waist');
+      const weightInput = document.getElementById('weight');
+      const clearBtn = document.getElementById('clear-data');
+      const exportBtn = document.getElementById('export-csv');
+
+      dateInput.value = todayISO();
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const date = dateInput.value || todayISO();
+
+        const waistRaw = String(waistInput.value || '').replace(',', '.');
+        const waist = parseFloat(waistRaw);
+
+        if (isNaN(waist)) {
+          alert('Bitte einen gültigen Bauchumfang eingeben.');
+          return;
+        }
+
+        const weightRaw = String(weightInput.value || '').replace(',', '.');
+        const weight = parseFloat(weightRaw);
+        const hasWeight = !isNaN(weight);
+
+        let entries = loadEntries();
+        const existingIndex = entries.findIndex(e => e.date === date);
+        if (existingIndex >= 0) {
+          entries[existingIndex].waist = waist;
+          if (hasWeight) {
+            entries[existingIndex].weight = weight;
+          }
+        } else {
+          const entry = { date: date, waist: waist };
+          if (hasWeight) {
+            entry.weight = weight;
+          }
+          entries.push(entry);
+        }
+        saveEntries(entries);
+        waistInput.value = '';
+        weightInput.value = '';
+        render();
+      });
+
+      clearBtn.addEventListener('click', function () {
+        if (confirm('Alle gespeicherten Daten wirklich löschen?')) {
+          localStorage.removeItem(STORAGE_KEY);
+          render();
+        }
+      });
+
+      exportBtn.addEventListener('click', function () {
+        const entries = loadEntries();
+        if (!entries.length) {
+          alert('Keine Daten zum Exportieren.');
+          return;
+        }
+
+        const waistAvg30 = computeMovingAverage(entries, WINDOW_30, 'waist');
+        const waistAvg365 = computeMovingAverage(entries, WINDOW_365, 'waist');
+        const waistAvgAll = computeCumulativeAverage(entries, 'waist');
+        const weightAvg30 = computeMovingAverage(entries, WINDOW_30, 'weight');
+        const weightAvg365 = computeMovingAverage(entries, WINDOW_365, 'weight');
+        const weightAvgAll = computeCumulativeAverage(entries, 'weight');
+
+        function formatCSV(value) {
+          if (value == null || isNaN(value)) return '';
+          return Number(value).toLocaleString('de-DE', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          });
+        }
+
+        const lines = [];
+        lines.push('Datum;Bauch (cm);Ø 30T Bauch;Ø 365T Bauch;Ø gesamt Bauch;Gewicht (kg);Ø 30T Gew.;Ø 365T Gew.;Ø gesamt Gew.');
+
+        entries.forEach((e, idx) => {
+          const parts = [
+            e.date,
+            formatCSV(e.waist),
+            formatCSV(waistAvg30[idx]),
+            formatCSV(waistAvg365[idx]),
+            formatCSV(waistAvgAll[idx]),
+            formatCSV(e.weight),
+            formatCSV(weightAvg30[idx]),
+            formatCSV(weightAvg365[idx]),
+            formatCSV(weightAvgAll[idx])
+          ];
+          lines.push(parts.join(';'));
+        });
+
+        const csvContent = lines.join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'body-tracker-bauch-gewicht.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      initForm();
+      render();
+    });
+  </script>
+</body>
+</html>
