@@ -469,6 +469,55 @@ td {
     margin-left: auto;
     margin-right: auto;
   }
+  /* ==== MOBILE OVERRIDE – NICHT MEHR ABSCHNEIDEN ==== */
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Alles, was breit werden könnte, auf Viewportbreite begrenzen */
+.app-shell,
+.layout,
+.card,
+#chart-container-body,
+#chart-container-energy,
+.table-wrapper {
+  max-width: 100vw;
+}
+
+/* Tabelle muss innerhalb scrollen dürfen, aber Seite nicht verbreitern */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+/* Tabelle selbst strikt an den Rahmen binden */
+table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;   /* Spalten teilen sich den Platz */
+}
+
+/* Zellen dürfen umbrechen, lange Texte machen keinen Horizontal-Scroll */
+th,
+td {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Kleines Finetuning für sehr schmale Smartphones */
+@media (max-width: 480px) {
+  .app-shell {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .card {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 }  </style>
 </head>
 <body>
