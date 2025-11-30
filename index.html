@@ -430,7 +430,46 @@
     .summary-row strong {
       color: var(--accent);
     }
-  </style>
+    /* --- MOBILE FIXES --- */
+
+/* Karten niemals breiter als der Screen */
+.card {
+  max-width: 100%;
+}
+
+/* Layout darf nie breiter als die Seite werden */
+.layout {
+  max-width: 100%;
+}
+
+/* Tabelle soll IN der Karte scrollen, nicht die ganze Seite breiter machen */
+.table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Tabellenbreite an Wrapper anpassen, Überschriften dürfen umbrechen */
+table {
+  width: 100%;
+}
+
+th,
+td {
+  white-space: normal;
+}
+
+/* Extra-Layout für kleine Bildschirme */
+@media (max-width: 640px) {
+  .app-shell {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .card {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}  </style>
 </head>
 <body>
   <main class="app-shell">
